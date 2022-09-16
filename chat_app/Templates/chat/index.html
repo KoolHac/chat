@@ -1,0 +1,75 @@
+<!DOCTYPE html><html lang="en">
+    <head>
+        <title>{{ chat }}</title>
+        <meta charset="UTF-8" viewpoint>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    </head>
+    <body>
+        <div class="message-container"></div>
+        <div class="form-container">
+            <form id="message-form">
+                {% csrf_token %}
+            <input type="hidden" id="user-field" value="{{ user }}">
+            <input type="hidden" id="chat-field" value="{{ chat }}" >
+            <input type="text" name="title" id="title" placeholder="Enter Message" required>
+            <button type="submit">Send</button>
+            </form>
+        </div>
+        <script>
+            // GET all the messages in real-time
+            $(document).ready(function(){
+                var chat = $('#chat-field').val()
+                var user = $('#user-field').val()
+                var url = '/chat/'+chat+'/'+user+'/read'
+                setInterval(function(){
+                    $.getJSON(url, function(data, status){
+                        $('.message-container').empty()
+                        $.each(data.res, function(index){
+                            var get_sender = data.res[index].sender
+                            var get_title =  data.res[index].title
+                            var get_date   = data.res[index].date
+                            var message = get_sender + ' : ' + get_title + ' |  '+ get_date + '<hr>'
+                            $('.message-container').append(message) 
+                        })
+                        
+                    })
+                }, 1000)
+            })
+        </script>
+        <script>
+         $('#message-form').submit(function(event){
+             event.preventDefault()
+             var chat = $('#chat-field').val()
+                var user = $('#user-field').val()
+                var url = '/chat/'+chat+'/'+user+'/post/'
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        'title':$('#title').val(),
+                        'user': user,
+                        'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+                    },
+                    success : function(){
+                        alert("message sent!!!!")
+                    }
+                })
+                document.getElementById('title').value=''
+         })
+        </script>
+        </body>
+        <footer>
+            <div  class="get-time"></div>
+            <script>
+                $(document).ready(function(){
+                    setInterval(function(){
+                        
+                     $.getJSON('/chat/time/get/', function(data){
+                         $('.get-time').empty()
+                         $('.get-time').append(data.res + '<br>')
+                     })
+            
+                    },1000)
+                })
+            </script>
